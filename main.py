@@ -1,11 +1,11 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, Canvas
+from tkinter import ttk, messagebox, Canvas, Button
 import ui
+import random
 
 teacher_count = 0 # 전역 변수로 선생님 수 저장
 teacher_names = [] # 선생님 이름 리스트
 entry_list = [] # 전역 변수로 관리
-
 teacher_schedule = {} # {이름: {요일: [가능한 시간 리스트]}} 형태로 저장
 
 # 선생님 이름 입력 UI
@@ -44,24 +44,31 @@ def open_teacher_name_window():
     name_window.mainloop()
 
 # 시간표 UI로 이동하는 함수(다음 단계에서 구현)
+selected_teacher_filter = None  # ✅ 선택된 선생님 저장 (기본 None)
+
+from tkinter import Canvas
 
 def open_schedule_window():
-    global teacher_schedule  # ✅ 전역 변수 추가
-    print(f"DEBUG: open_schedule_window 실행됨, 현재 teacher_schedule → {teacher_schedule}")  # ✅ 디버깅 추가
+    global teacher_schedule
+
+    print(f"DEBUG: open_schedule_window 실행됨, 현재 teacher_schedule → {teacher_schedule}")
 
     schedule_window = tk.Tk()
     schedule_window.title("학원 시간표")
     schedule_window.geometry("900x600")
 
-    label = tk.Label(schedule_window, text="선생님 시간표", font=("Arial", 14))
+    label = tk.Label(schedule_window, text="학원 시간표", font=("Arial", 14))
     label.pack(pady=10)
 
+    frame = tk.Frame(schedule_window)
+    frame.pack()
+
     # ✅ 캔버스를 사용하여 시간표 표시
-    canvas = Canvas(schedule_window, width=850, height=500, bg="white")
+    canvas = Canvas(frame, width=850, height=500, bg="white")
     canvas.pack()
 
     columns = ["시간"] + ["월", "화", "수", "목", "금", "토", "일"]
-    times = [f"{hour}:00" for hour in range(10, 23)]
+    times = [f"{hour}:00-{hour+1}:00" for hour in range(10, 22)]  # ✅ 시간 범위로 변경
     
     cell_width = 100
     cell_height = 30
@@ -74,7 +81,7 @@ def open_schedule_window():
                                 start_x + (col_idx + 1) * cell_width, start_y, fill="gray")
         canvas.create_text(start_x + col_idx * cell_width + 50, start_y - 15, text=col, font=("Arial", 12), fill="white")
 
-    # ✅ 시간 및 요일 셀 그리기
+    # ✅ 시간 및 요일 셀 그리기 (초록색 통일)
     for row_idx, time in enumerate(times):
         for col_idx, day in enumerate(columns):
             x1 = start_x + col_idx * cell_width
@@ -84,19 +91,19 @@ def open_schedule_window():
 
             if col_idx == 0:  # ✅ 첫 번째 컬럼(시간)
                 canvas.create_rectangle(x1, y1, x2, y2, fill="lightgray")
-                canvas.create_text(x1 + 50, y1 + 15, text=time, font=("Arial", 12))
+                canvas.create_text(x1 + 50, y1 + 15, text=time, font=("Arial", 12))  # ✅ 시간 범위 표시
             else:  # ✅ 요일별 데이터
                 teachers = []
                 for teacher in teacher_schedule:
-                    if day in teacher_schedule[teacher] and time in teacher_schedule[teacher][day]:
+                    if day in teacher_schedule[teacher] and time.split('-')[0] in teacher_schedule[teacher][day]:
                         teachers.append(teacher)
 
                 if teachers:
-                    canvas.create_rectangle(x1, y1, x2, y2, fill="lightgreen")  # ✅ 가능 시간 초록색
+                    canvas.create_rectangle(x1, y1, x2, y2, fill="lightgreen")  # ✅ 초록색 통일
                     canvas.create_text(x1 + 50, y1 + 15, text=", ".join(teachers), font=("Arial", 10))
                 else:
                     canvas.create_rectangle(x1, y1, x2, y2, fill="white")
-    
+
     # ✅ 편집 버튼 추가
     edit_button = tk.Button(schedule_window, text="편집", font=("Arial", 12), command=open_time_selection_window)
     edit_button.pack(pady=10)
@@ -110,7 +117,7 @@ def open_time_selection_window():
     global teacher_schedule  # ✅ 전역 변수 사용
     time_window = tk.Tk()
     time_window.title("가능한 시간 선택")
-    time_window.geometry("600x500")
+    time_window.geometry("1280x700")
 
     label = tk.Label(time_window, text="가능한 시간을 선택하세요", font=("Arial", 14))
     label.pack(pady=10)
@@ -125,7 +132,7 @@ def open_time_selection_window():
     checkboxes = {}
 
     days = ["월", "화", "수", "목", "금", "토", "일"]
-    times = [f"{hour}:00" for hour in range(10, 23)]
+    times = [f"{hour}:00-{hour+1}:00" for hour in range(10, 22)]  # ✅ 시간 범위로 표시
 
     for day in days:
         frame = tk.LabelFrame(time_window, text=day, padx=5, pady=5)
@@ -172,7 +179,7 @@ def open_time_selection_window():
             teacher_schedule[teacher][day] = []
             for time, var in checkboxes[day].items():
                 if var.get():
-                    teacher_schedule[teacher][day].append(time)
+                    teacher_schedule[teacher][day].append(time.split('-')[0])  # ✅ 시작 시간만 저장
 
         print(f"DEBUG: {teacher} 선생님의 가능 시간 → {teacher_schedule[teacher]}")  # ✅ 디버깅 추가
         print(f"DEBUG: 최종 teacher_schedule 데이터 → {teacher_schedule}")  # ✅ 전체 데이터 확인 추가
