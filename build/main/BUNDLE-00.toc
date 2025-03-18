@@ -1,0 +1,3 @@
+([('main',
+   '/Users/yeonjaehyuck/Desktop/Project/TimeTableAca/dist/main',
+   'EXECUTABLE')],)
