@@ -23,8 +23,10 @@ class TimeTableApp:
     def get_teacher_count(self):
         count = self.entry.get()
         if count.isdigit() and int(count) > 0:
-            main.get_teacher_count = int(count) # 메인 파일에서 전역 변수로 저장
+            main.teacher_count = int(count) # 메인 파일에서 전역 변수로 저장
+            print(f"DEBUG: 입력된 선생님 수 → {main.teacher_count}")  # ✅ 디버깅 출력
+
             self.root.destroy()     #현재 창 닫기
-            main.open_teacher_name_window # 다음 창 열기
+            main.open_teacher_name_window() # 다음 창 열기
         else: 
             messagebox.showerror("오류", "올바른 숫자를 입력하세요.")
